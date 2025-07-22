@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: nginx-basic-auth
+data:
+    nginx-basic-auth.conf: |-
+        server {
+            listen 80 default_server;
+
+            location ~^/([^/]+)/([^/]+)/([^/]+)(/.*)?$ {
+                resolver kube-dns.kube-system.svc.cluster.local:53;
+                auth_basic "Restricted";
+                set $svc "$1.$2.svc.cluster.local";
+                set $port "$3";
+                set $path "$4";
+
+                proxy_pass http://$svc:$port$path$is_args$args;
+                proxy_set_header Host $host;
+                proxy_read_timeout 900;
+            }
+        }
+
